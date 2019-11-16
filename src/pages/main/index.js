@@ -7,6 +7,8 @@ export default class Main extends Component {
   // utilizando conceito de estado
   state = {
     products: [],
+    productInfo: {},
+    page: 1,
   }
 
   // executa uma ação logo que o componente é exibido em tela. 
@@ -15,14 +17,37 @@ export default class Main extends Component {
   }
 
   // usa-se arrow functions em funções criadas por nós, para não sobrescrever o this.  
-  loadProducts = async () => {
-    const response = await api.get("/products");
+  loadProducts = async (page = 1) => {
+    const response = await api.get(`/products?page=${page}`);
 
-    this.setState({ products: response.data.docs});
+    const { docs, ... productInfo } = response.data;
+
+    this.setState({ products: docs, productInfo, page });
+  }
+
+  prevPage = () => {
+    const { page, productInfo} = this.state;
+
+    if (page === 1) return;
+
+    const pageNumber = page - 1;
+
+    this.loadProducts(pageNumber);
+  }
+
+  nextPage = () => {
+    const { page, productInfo } = this.state;
+
+    if (page === productInfo.pages) return;
+
+    const pageNumber = page + 1;
+
+    this.loadProducts(pageNumber);
+
   }
 
   render() {
-    const { products } = this.state
+    const { products, page, productInfo } = this.state
 
     return (
       <div className="product-list">
@@ -34,6 +59,10 @@ export default class Main extends Component {
             <a href="">Acessar</a>
           </article>
         ))}
+        <div className="actions">
+          <button disabled={page === 1} onClick={this.prevPage}>Anterior</button>
+          <button disabled={page === productInfo.pages} onClick={this.nextPage}>Próximo</button>
+        </div>
       </div>
     );
   }
